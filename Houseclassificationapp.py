@@ -62,35 +62,35 @@ if uploaded_zip is not None:
     os.makedirs(output_folder, exist_ok=True)
 
     # Extract the zip file
-with zipfile.ZipFile(uploaded_zip, 'r') as zip_ref:
-    extraction_path = "temp_images"
-    zip_ref.extractall(extraction_path)
-
-# Remove any subdirectories and move images to the extraction_path
-for root, dirs, files in os.walk(extraction_path):
-    for file in files:
-        file_path = os.path.join(root, file)
-        os.rename(file_path, os.path.join(extraction_path, file))
-    for dir in dirs:
-        os.rmdir(os.path.join(root, dir))
-
-st.write(f"Classifying and organizing images in folder: {extraction_path}")
-
-    # Get the list of image paths in the extracted folder
+    with zipfile.ZipFile(uploaded_zip, 'r') as zip_ref:
+        extraction_path = "temp_images"
+        zip_ref.extractall(extraction_path)
+    
+    # Remove any subdirectories and move images to the extraction_path
+    for root, dirs, files in os.walk(extraction_path):
+        for file in files:
+            file_path = os.path.join(root, file)
+            os.rename(file_path, os.path.join(extraction_path, file))
+        for dir in dirs:
+            os.rmdir(os.path.join(root, dir))
+    
+    st.write(f"Classifying and organizing images in folder: {extraction_path}")
+    
+    # Get the list of image paths in the flattened extraction folder
     image_paths = [os.path.join(extraction_path, filename) for filename in os.listdir(extraction_path)]
-
+    
     # Perform inference on all images in the folder and organize by class
     results = classify_images(image_paths, output_folder)
-
+    
     # Display results
     for result in results:
         st.write(f"Original Filename: {result['filename']}")
         st.write(f"Classified as: {result['class_label']} with Confidence: {result['confidence']:.2%}")
         st.write("----")
-
+    
     # Create a DataFrame from the results
     df = pd.DataFrame(results)
-
+    
     # Add a download button for the CSV file with image names and classes
     st.download_button(
         label="Download Results as CSV",
@@ -98,7 +98,7 @@ st.write(f"Classifying and organizing images in folder: {extraction_path}")
         file_name='image_classification_results.csv',
         key='download_results_button'
     )
-
+    
     # Create a zip file containing the organized images
     organized_zip_path = "organized_images.zip"
     with zipfile.ZipFile(organized_zip_path, 'w') as zip_output:
@@ -106,7 +106,7 @@ st.write(f"Classifying and organizing images in folder: {extraction_path}")
             for file in files:
                 file_path = os.path.join(root, file)
                 zip_output.write(file_path, os.path.relpath(file_path, output_folder))
-
+    
     # Add a download button for the zip file with organized images
     st.download_button(
         label="Download Organized Images",
@@ -114,4 +114,4 @@ st.write(f"Classifying and organizing images in folder: {extraction_path}")
         file_name='organized_images.zip',
         key='download_organized_button'
     )
-
+    
