@@ -62,11 +62,19 @@ if uploaded_zip is not None:
     os.makedirs(output_folder, exist_ok=True)
 
     # Extract the zip file
-    with zipfile.ZipFile(uploaded_zip, 'r') as zip_ref:
-        extraction_path = "temp_images"
-        zip_ref.extractall(extraction_path)
+with zipfile.ZipFile(uploaded_zip, 'r') as zip_ref:
+    extraction_path = "temp_images"
+    zip_ref.extractall(extraction_path)
 
-    st.write(f"Classifying and organizing images in folder: {extraction_path}")
+# Remove any subdirectories and move images to the extraction_path
+for root, dirs, files in os.walk(extraction_path):
+    for file in files:
+        file_path = os.path.join(root, file)
+        os.rename(file_path, os.path.join(extraction_path, file))
+    for dir in dirs:
+        os.rmdir(os.path.join(root, dir))
+
+st.write(f"Classifying and organizing images in folder: {extraction_path}")
 
     # Get the list of image paths in the extracted folder
     image_paths = [os.path.join(extraction_path, filename) for filename in os.listdir(extraction_path)]
