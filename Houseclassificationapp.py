@@ -26,15 +26,19 @@ def classify_image(image_path):
 def classify_images(image_paths):
     results = []
     for image_path in image_paths:
-        try:
-            class_label, confidence = classify_image(image_path)
-            results.append({
-                'filename': os.path.basename(image_path),
-                'class_label': class_label,
-                'confidence': confidence
-            })
-        except Exception as e:
-            st.warning(f"Error classifying image {image_path}: {e}")
+        # Check if the path is a file
+        if os.path.isfile(image_path):
+            try:
+                class_label, confidence = classify_image(image_path)
+                results.append({
+                    'filename': os.path.basename(image_path),
+                    'class_label': class_label,
+                    'confidence': confidence
+                })
+            except Exception as e:
+                st.warning(f"Error classifying image {image_path}: {e}")
+        else:
+            st.warning(f"Skipping non-image file: {image_path}")
 
     return results
 
@@ -50,7 +54,7 @@ def rename_images(image_paths, results):
     return renamed_paths
 
 # Create Streamlit app
-st.title("Image Classification App")
+st.title("House Image Classification App")
 
 uploaded_zip = st.file_uploader("Upload a zip file containing images", type=["zip"])
 
