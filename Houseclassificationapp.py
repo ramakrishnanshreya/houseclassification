@@ -26,8 +26,8 @@ def classify_image(image_path):
 def classify_images(image_paths):
     results = []
     for image_path in image_paths:
-        # Check if the path is a file
-        if os.path.isfile(image_path):
+        # Check if the path is a file and ends with a supported image extension
+        if os.path.isfile(image_path) and image_path.lower().endswith(('.jpg', '.jpeg', '.png')):
             try:
                 class_label, confidence = classify_image(image_path)
                 results.append({
