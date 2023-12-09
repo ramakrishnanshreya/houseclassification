@@ -26,10 +26,6 @@ def classify_image(image_path):
 def classify_images(image_paths):
     results = []
     for image_path in image_paths:
-        # Skip directories
-        if os.path.isdir(image_path):
-            continue
-
         try:
             class_label, confidence = classify_image(image_path)
             results.append({
@@ -78,6 +74,7 @@ if uploaded_zip is not None:
         file_name='image_classification_results.csv',
         key='download_results_button'
     )
+
 
     # Perform inference
     class_label, confidence = classify_image(uploaded_file)
