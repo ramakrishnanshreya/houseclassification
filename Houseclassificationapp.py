@@ -26,12 +26,20 @@ def classify_image(image_path):
 def classify_images(image_paths):
     results = []
     for image_path in image_paths:
-        class_label, confidence = classify_image(image_path)
-        results.append({
-            'filename': os.path.basename(image_path),
-            'class_label': class_label,
-            'confidence': confidence
-        })
+        # Skip directories
+        if os.path.isdir(image_path):
+            continue
+
+        try:
+            class_label, confidence = classify_image(image_path)
+            results.append({
+                'filename': os.path.basename(image_path),
+                'class_label': class_label,
+                'confidence': confidence
+            })
+        except Exception as e:
+            st.warning(f"Error classifying image {image_path}: {e}")
+
     return results
 
 # Create Streamlit app
