@@ -38,6 +38,17 @@ def classify_images(image_paths):
 
     return results
 
+# Function to rename images based on classifications
+def rename_images(image_paths, results):
+    renamed_paths = []
+    for result in results:
+        old_path = os.path.join(extraction_path, result['filename'])
+        new_filename = f"{result['class_label']}_{result['confidence']:.2%}.jpg"
+        new_path = os.path.join(extraction_path, new_filename)
+        os.rename(old_path, new_path)
+        renamed_paths.append(new_path)
+    return renamed_paths
+
 # Create Streamlit app
 st.title("Image Classification App")
 
@@ -49,7 +60,7 @@ if uploaded_zip is not None:
         extraction_path = "temp_images"
         zip_ref.extractall(extraction_path)
 
-    st.write(f"Classifying images in folder: {extraction_path}")
+    st.write(f"Classifying and renaming images in folder: {extraction_path}")
 
     # Get the list of image paths in the extracted folder
     image_paths = [os.path.join(extraction_path, filename) for filename in os.listdir(extraction_path)]
@@ -57,11 +68,13 @@ if uploaded_zip is not None:
     # Perform inference on all images in the folder
     results = classify_images(image_paths)
 
+    # Rename images based on classifications
+    renamed_paths = rename_images(image_paths, results)
+
     # Display results
     for result in results:
-        st.write(f"Filename: {result['filename']}")
-        st.write(f"Predicted Class: {result['class_label']}")
-        st.write(f"Confidence Score: {result['confidence']:.2%}")
+        st.write(f"Original Filename: {result['filename']}")
+        st.write(f"Classified as: {result['class_label']} with Confidence: {result['confidence']:.2%}")
         st.write("----")
 
     # Create a DataFrame from the results
@@ -75,8 +88,16 @@ if uploaded_zip is not None:
         key='download_results_button'
     )
 
+    # Create a new zip file with renamed images
+    with zipfile.ZipFile("renamed_images.zip", 'w') as zip_output:
+        for renamed_path in renamed_paths:
+            zip_output.write(renamed_path, os.path.basename(renamed_path))
+    
+    # Add a download button for the renamed images
+    st.download_button(
+        label="Download Renamed Images",
+        data=open("renamed_images.zip", "rb").read(),
+        file_name='renamed_images.zip',
+        key='download_renamed_button'
+    )
 
-    # Perform inference
-    class_label, confidence = classify_image(uploaded_file)
-    st.write(f"Predicted Class: {class_label}")
-    st.write(f"Confidence Score: {confidence:.2%}")
