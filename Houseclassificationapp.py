@@ -75,8 +75,7 @@ if uploaded_file is not None:
 
     # Plot aggregated SHAP values
     st.write("Aggregated SHAP Plot for All Images")
-    shap_plot = shap.image_plot(mean_shap_values, img_array, class_names=class_labels, show=False)
-    st.pyplot(shap_plot)
+    shap.image_plot(mean_shap_values, -img_array, show=False)  # Note the negative sign for the image array
 
     # Create a DataFrame for all results
     df_all_results = pd.DataFrame(all_results)
@@ -91,15 +90,13 @@ if uploaded_file is not None:
             zipf.writestr(f"classification_results_{file_names[idx]}.csv", csv_bytes.getvalue())
 
     # Create download buttons for CSV, zip file, and SHAP plot
-    csv_bytes = BytesIO()
-    df_all_results.to_csv(csv_bytes, index=False)
-    st.download_button(label="Download CSV", data=csv_bytes.getvalue(), file_name="classification_results.csv", key="csv_results")
-
+    st.download_button(label="Download CSV", data=df_all_results.to_csv(index=False), file_name="classification_results.csv", key="csv_results")
     st.download_button(label="Download Classified Zip Folder", data=None, file_name=zip_results_path, key="zip_results")
 
     shap_bytes = BytesIO()
-    shap_plot.savefig(shap_bytes, format='png')
+    shap.image_plot(mean_shap_values, -img_array, show=False).savefig(shap_bytes, format='png')
     st.download_button(label="Download SHAP Plot", data=shap_bytes.getvalue(), file_name="shap_plot.png", key="shap_plot")
+
 
 
 
