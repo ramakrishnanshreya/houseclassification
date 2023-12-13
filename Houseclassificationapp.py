@@ -70,14 +70,16 @@ if uploaded_file is not None:
             data = {'Original Filename': [file_name], 'Classified as': [class_label], 'Confidence': [confidence]}
             all_results.append(data)
 
-    # Display individual SHAP plots
-    for i, file_name in enumerate(file_names):
-        st.write(f"SHAP Plot for {file_name}")
-        shap.summary_plot(all_shap_values[i].values, -np.squeeze(img_array), class_names=class_labels, show=False)
-        # Save the SHAP plot to a file
-        shap_plot_file_path = os.path.join(tempfile.gettempdir(), f'shap_plot_{file_name}.png')
-        plt.savefig(shap_plot_file_path, format='png')
-        plt.close()  # Close the figure to prevent displaying it again
+    # Display top 5 contributing images for each class
+    for i, label in enumerate(class_labels):
+        st.write(f"Top 5 Contributing Images for Class {label}")
+        top5_indices = np.argsort(np.sum(np.abs(all_shap_values[i].values), axis=(1, 2, 3)))[-5:][::-1]
+
+        for idx in top5_indices:
+            # Plot the image
+            plt.imshow(img_array[0])
+            plt.title(f"Contribution: {np.sum(np.abs(all_shap_values[i].values[idx])):.4f}")
+            st.pyplot()
 
     # Convert class labels to list of strings
     class_labels = list(map(str, class_labels))
@@ -94,32 +96,6 @@ if uploaded_file is not None:
                 csv_bytes = BytesIO()
                 df.to_csv(csv_bytes, index=False)
                 zipf.writestr(f"classification_results_{file_names[idx]}.csv", csv_bytes.getvalue())
-
-            # Create a zip file with individual SHAP plots
-            shap_plots_zip_path = os.path.join(temp_dir, "shap_plots.zip")
-            with zipfile.ZipFile(shap_plots_zip_path, "w") as zipf:
-                for file_name in file_names:
-                    shap_plot_file_path = os.path.join(tempfile.gettempdir(), f'shap_plot_{file_name}.png')
-                    zipf.write(shap_plot_file_path, f'shap_plots/{file_name}.png')
-
-    # Display aggregated SHAP plot
-    st.write("Aggregated SHAP Plot for All Images")
-    all_shap_values = np.array(all_shap_values)
-    mean_shap_values = np.mean(all_shap_values, axis=0)
-    shap.summary_plot(mean_shap_values.values, -np.squeeze(img_array), class_names=class_labels, show=False)
-
-    # Save the plot to a BytesIO object
-    shap_bytes = BytesIO()
-    plt.savefig(shap_bytes, format='png')
-    plt.close()  # Close the figure to prevent displaying it again
-
-    # Display the saved plot
-    st.image(shap_bytes)
-
-    # Create download buttons for CSV, zip file, and SHAP plots
-    st.download_button(label="Download CSV", data=df_all_results.to_csv(index=False), file_name="classification_results.csv", key="csv_results")
-    st.download_button(label="Download Classified Zip Folder", data=zip_results_path, file_name="classification_results.zip", key="zip_results")
-    st.download_button(label="Download SHAP Plots Zip", data=shap_plots_zip_path, file_name="shap_plots.zip", key="shap_plots")
 
 
 
