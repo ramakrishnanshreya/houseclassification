@@ -70,16 +70,15 @@ if uploaded_file is not None:
             data = {'Original Filename': [file_name], 'Classified as': [class_label], 'Confidence': [confidence]}
             all_results.append(data)
 
-    # Display top 5 contributing images for each class
+    # Display one contributing image for each class
     for i, label in enumerate(class_labels):
-        st.write(f"Top 5 Contributing Images for Class {label}")
-        top5_indices = np.argsort(np.sum(np.abs(all_shap_values[i].values), axis=(1, 2, 3)))[-5:][::-1]
+        st.write(f"Top Contributing Image for Class {label}")
+        top_index = np.argmax(np.sum(np.abs(all_shap_values[i].values), axis=(1, 2, 3)))
 
-        for idx in top5_indices:
-            # Plot the image
-            plt.imshow(img_array[0])
-            plt.title(f"Contribution: {np.sum(np.abs(all_shap_values[i].values[idx])):.4f}")
-            st.pyplot()
+        # Plot the image
+        plt.imshow(img_array[0])
+        plt.title(f"Contribution: {np.sum(np.abs(all_shap_values[i].values[top_index])):.4f}")
+        st.pyplot()
 
     # Convert class labels to list of strings
     class_labels = list(map(str, class_labels))
@@ -96,6 +95,7 @@ if uploaded_file is not None:
                 csv_bytes = BytesIO()
                 df.to_csv(csv_bytes, index=False)
                 zipf.writestr(f"classification_results_{file_names[idx]}.csv", csv_bytes.getvalue())
+
 
 
 
