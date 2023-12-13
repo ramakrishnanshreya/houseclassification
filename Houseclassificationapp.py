@@ -77,12 +77,14 @@ if uploaded_file is not None:
     all_shap_values = np.array(all_shap_values)
     mean_shap_values = np.mean(all_shap_values, axis=0)
 
-    # Plot aggregated SHAP values
+   # Plot aggregated SHAP values
     st.write("Aggregated SHAP Plot for All Images")
+    
+    # Use shap.summary_plot to visualize the summary of SHAP values
+    shap.summary_plot(mean_shap_values, -img_array[0], class_names=class_labels, show=False)
     
     # Save the plot to a BytesIO object
     shap_bytes = BytesIO()
-    shap.image_plot_summary(mean_shap_values, -img_array[0], class_names=class_labels, show=False)
     plt.savefig(shap_bytes, format='png')
     plt.close()  # Close the figure to prevent displaying it again
     
