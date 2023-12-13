@@ -7,6 +7,7 @@ from io import BytesIO
 import zipfile
 import os
 import pandas as pd
+import tempfile
 
 # Load the model and labels
 model = tf.keras.models.load_model('keras_model.h5')
@@ -81,21 +82,23 @@ if uploaded_file is not None:
     df_all_results = pd.DataFrame(all_results)
 
     # Create a zip file with individual classification results
-    zip_results_path = "classification_results.zip"
-    with zipfile.ZipFile(zip_results_path, "w") as zipf:
-        for idx, data in enumerate(all_results):
-            df = pd.DataFrame(data)
-            csv_bytes = BytesIO()
-            df.to_csv(csv_bytes, index=False)
-            zipf.writestr(f"classification_results_{file_names[idx]}.csv", csv_bytes.getvalue())
+    with tempfile.TemporaryDirectory() as temp_dir:
+        zip_results_path = os.path.join(temp_dir, "classification_results.zip")
+        with zipfile.ZipFile(zip_results_path, "w") as zipf:
+            for idx, data in enumerate(all_results):
+                df = pd.DataFrame(data)
+                csv_bytes = BytesIO()
+                df.to_csv(csv_bytes, index=False)
+                zipf.writestr(f"classification_results_{file_names[idx]}.csv", csv_bytes.getvalue())
 
-    # Create download buttons for CSV, zip file, and SHAP plot
-    st.download_button(label="Download CSV", data=df_all_results.to_csv(index=False), file_name="classification_results.csv", key="csv_results")
-    st.download_button(label="Download Classified Zip Folder", data=None, file_name=zip_results_path, key="zip_results")
+        # Create download buttons for CSV, zip file, and SHAP plot
+        st.download_button(label="Download CSV", data=df_all_results.to_csv(index=False), file_name="classification_results.csv", key="csv_results")
+        st.download_button(label="Download Classified Zip Folder", data=zip_results_path, file_name="classification_results.zip", key="zip_results")
 
-    shap_bytes = BytesIO()
-    shap.image_plot(mean_shap_values, -img_array, show=False).savefig(shap_bytes, format='png')
-    st.download_button(label="Download SHAP Plot", data=shap_bytes.getvalue(), file_name="shap_plot.png", key="shap_plot")
+        shap_bytes = BytesIO()
+        shap.image_plot(mean_shap_values, -img_array, show=False).savefig(shap_bytes, format='png')
+        st.download_button(label="Download SHAP Plot", data=shap_bytes.getvalue(), file_name="shap_plot.png", key="shap_plot")
+
 
 
 
