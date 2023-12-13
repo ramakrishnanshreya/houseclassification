@@ -14,68 +14,62 @@ with open('labels.txt', 'r') as file:
     class_labels = file.read().splitlines()
 
 # Define image classification function
-def classify_image(image_path):
-    img = Image.open(image_path).resize((224, 224))
-    img_array = np.array(img) / 255.0
-    img_array = np.expand_dims(img_array, axis=0)
+def classify_image(img_array):
     prediction = model.predict(img_array)[0]
     class_index = np.argmax(prediction)
     confidence = prediction[class_index]
     class_label = class_labels[class_index]
-    return class_label, confidence, img_array
+    return class_label, confidence
 
 # Define SHAP explanation function
 def explain_image(img_array):
     # Create a SHAP explainer
     explainer = shap.Explainer(model)
     shap_values = explainer.shap_values(img_array)
-
-    # Get class index and label
-    class_index = np.argmax(model.predict(img_array)[0])
-    class_label = class_labels[class_index]
-
-    # Plot SHAP values
-    shap_plot = shap.image_plot(shap_values, img_array, class_names=[class_label], show=False)
-    return shap_plot
+    return shap_values
 
 # Create Streamlit app
 st.title("House Classification App")
 
-uploaded_file = st.file_uploader("Choose a file...", type=["jpg", "jpeg", "png"])
+uploaded_file = st.file_uploader("Choose a zip file...", type=["zip"])
 
 if uploaded_file is not None:
-    st.image(uploaded_file, caption="Uploaded Image.", use_column_width=True)
-    st.write("")
-    st.write("Classifying...")
+    all_shap_values = []
 
-    # Perform inference
-    _, _, img_array = classify_image(uploaded_file)
+    with zipfile.ZipFile(uploaded_file, 'r') as zip_ref:
+        file_names = zip_ref.namelist()
 
-    # Explain the prediction using SHAP
-    shap_plot = explain_image(img_array)
+        for file_name in file_names:
+            # Read image from zip file
+            img_data = zip_ref.read(file_name)
+            img = Image.open(BytesIO(img_data)).resize((224, 224))
+            img_array = np.array(img) / 255.0
+            img_array = np.expand_dims(img_array, axis=0)
 
-    # Create a download button for the SHAP plot
-    shap_bytes = BytesIO()
-    shap_plot.savefig(shap_bytes, format='png')
-    st.download_button(label="Download SHAP Plot", data=shap_bytes.getvalue(), file_name="shap_plot.png", key="shap_plot")
+            # Perform inference
+            class_label, confidence = classify_image(img_array)
 
-    # Create a DataFrame (replace this with your actual data)
-    data = {'Original Filename': [uploaded_file.name], 'Classified as': ['Class not displayed'], 'Confidence': [0.0]}
-    df = pd.DataFrame(data)
+            # Explain the prediction using SHAP
+            shap_values = explain_image(img_array)
+            all_shap_values.append(shap_values)
 
-    # Create a download button for the CSV file
-    csv_bytes = BytesIO()
-    df.to_csv(csv_bytes, index=False)
-    st.download_button(label="Download CSV", data=csv_bytes.getvalue(), file_name="classification_results.csv", key="csv_results")
+            # Create a DataFrame for results
+            data = {'Original Filename': [file_name], 'Classified as': [class_label], 'Confidence': [confidence]}
+            df = pd.DataFrame(data)
 
-    # Create a download button for the zip file
-    with zipfile.ZipFile("classification_results.zip", "w") as zipf:
-        zipf.writestr("classification_results.csv", df.to_csv(index=False))
+            # Create a download button for the CSV file
+            csv_bytes = BytesIO()
+            df.to_csv(csv_bytes, index=False)
+            st.download_button(label=f"Download CSV ({file_name})", data=csv_bytes.getvalue(), file_name=f"classification_results_{file_name}.csv", key=f"csv_results_{file_name}")
 
-    st.download_button(label="Download Zip", data=None, file_name="classification_results.zip", key="zip_results")
+    # Aggregate SHAP values
+    all_shap_values = np.array(all_shap_values)
+    mean_shap_values = np.mean(all_shap_values, axis=0)
 
-    # Close the SHAP plot to free up resources
-    st.pyplot(shap_plot)
+    # Plot aggregated SHAP values
+    st.write("Aggregated SHAP Plot for All Images")
+    shap.image_plot(mean_shap_values, img_array, class_names=class_labels, show=True)
+
 
 
 
