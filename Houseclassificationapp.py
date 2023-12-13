@@ -110,18 +110,19 @@ if uploaded_file is not None:
                 df.to_csv(csv_bytes, index=False)
                 zipf.writestr(f"classification_results_{file_names[idx]}.csv", csv_bytes.getvalue())
 
-                        # Create a zip file with individual SHAP plots
-                        shap_plots_zip_path = os.path.join(temp_dir, "shap_plots.zip")
-                        with zipfile.ZipFile(shap_plots_zip_path, "w") as zipf:
-                            for file_name in file_names:
-                                shap_plot_file_path = os.path.join(tempfile.gettempdir(), f'shap_plot_{file_name}.png')
-                                zipf.write(shap_plot_file_path, f'shap_plots/{file_name}.png')
+            # Create a zip file with individual SHAP plots
+            shap_plots_zip_path = os.path.join(temp_dir, "shap_plots.zip")
+            with zipfile.ZipFile(shap_plots_zip_path, "w") as zipf:
+                for file_name in file_names:
+                    shap_plot_file_path = os.path.join(tempfile.gettempdir(), f'shap_plot_{file_name}.png')
+                    zipf.write(shap_plot_file_path, f'shap_plots/{file_name}.png')
 
-                        # Create download buttons for CSV, zip file, and SHAP plot
-                        st.download_button(label="Download CSV", data=df_all_results.to_csv(index=False), file_name="classification_results.csv", key="csv_results")
-                        st.download_button(label="Download Classified Zip Folder", data=zip_results_path, file_name="classification_results.zip", key="zip_results")
-                        st.download_button(label="Download SHAP Plot", data=shap_bytes.getvalue(), file_name="shap_plot.png", key="shap_plot")
-                        st.download_button(label="Download SHAP Plots Zip", data=shap_plots_zip_path, file_name="shap_plots.zip", key="shap_plots")
+            # Create download buttons for CSV, zip file, and SHAP plot
+            st.download_button(label="Download CSV", data=df_all_results.to_csv(index=False), file_name="classification_results.csv", key="csv_results")
+            st.download_button(label="Download Classified Zip Folder", data=zip_results_path, file_name="classification_results.zip", key="zip_results")
+            st.download_button(label="Download SHAP Plot", data=shap_bytes.getvalue(), file_name="shap_plot.png", key="shap_plot")
+            st.download_button(label="Download SHAP Plots Zip", data=shap_plots_zip_path, file_name="shap_plots.zip", key="shap_plots")
+           
 
 
 
