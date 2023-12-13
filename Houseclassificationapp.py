@@ -117,7 +117,8 @@ if uploaded_file is not None:
             # Create download buttons for CSV, zip file, SHAP plot, and individual SHAP plots
             st.download_button(label="Download CSV", data=df_all_results.to_csv(index=False), file_name="classification_results.csv", key="csv_results")
             st.download_button(label="Download Classified Zip Folder", data=zip_results_path, file_name="classification_results.zip", key="zip_results")
-            st.download_button(label="Download SHAP Plot", data=shap_bytes
+            st.download_button(label="Download SHAP Plot", data=shap_bytes)
+
 
 
 
