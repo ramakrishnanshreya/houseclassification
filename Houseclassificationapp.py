@@ -23,8 +23,12 @@ def classify_image(img_array):
 
 # Define SHAP explanation function
 def explain_image(img_array):
+    # Ensure that the image array has the correct shape
+    if len(img_array.shape) == 3:
+        img_array = np.expand_dims(img_array, axis=0)  # Add a batch dimension
+
     # Create a SHAP explainer with a suitable masker
-    masker = shap.maskers.Image("inpaint_telea", img_array.shape[1:3])
+    masker = shap.maskers.Image("inpaint_telea", img_array.shape[1:4])
     explainer = shap.Explainer(model, masker)
 
     # Compute SHAP values
