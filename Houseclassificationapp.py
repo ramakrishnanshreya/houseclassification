@@ -49,9 +49,7 @@ if uploaded_file is not None:
     st.write("Classifying...")
 
     # Perform inference
-    class_label, confidence, img_array = classify_image(uploaded_file)
-    st.write(f"Predicted Class: {class_label}")
-    st.write(f"Confidence Score: {confidence:.2%}")
+    _, _, img_array = classify_image(uploaded_file)
 
     # Explain the prediction using SHAP
     shap_plot = explain_image(img_array)
@@ -62,7 +60,7 @@ if uploaded_file is not None:
     st.download_button(label="Download SHAP Plot", data=shap_bytes.getvalue(), file_name="shap_plot.png", key="shap_plot")
 
     # Create a DataFrame (replace this with your actual data)
-    data = {'Predicted Class': [class_label], 'Confidence Score': [confidence]}
+    data = {'Original Filename': [uploaded_file.name], 'Classified as': ['Class not displayed'], 'Confidence': [0.0]}
     df = pd.DataFrame(data)
 
     # Create a download button for the CSV file
@@ -78,5 +76,6 @@ if uploaded_file is not None:
 
     # Close the SHAP plot to free up resources
     st.pyplot(shap_plot)
+
 
 
