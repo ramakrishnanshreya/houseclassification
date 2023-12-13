@@ -85,7 +85,7 @@ if uploaded_file is not None:
     plt.close()  # Close the figure to prevent displaying it again
     
     # Display the saved plot
-    st.image(shap_bytes, format='png')
+    st.image(shap_bytes)
 
     # Create a DataFrame for all results
     df_all_results = pd.DataFrame(all_results)
