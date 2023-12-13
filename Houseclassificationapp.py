@@ -80,9 +80,17 @@ if uploaded_file is not None:
     for i, label in enumerate(class_labels):
         st.write(f"Top Contributing Image for Class {label}")
         top_index = np.argmax(np.sum(np.abs(all_shap_values[i].values), axis=(1, 2, 3)))
-
+    
+        # Plot the image with highlighted regions
+        fig, ax = plt.subplots()
+        ax.imshow(img_array[0])
+    
+        # Create a heatmap for the top contributing region
+        heatmap = shap_values.get_map(shap_values.data[top_index])
+        ax.imshow(heatmap, cmap='jet', alpha=0.5, extent=(0, 224, 224, 0), interpolation='bilinear')
+    
         # Display the image
-        st.image(img_array[0], caption=f"Contribution: {np.sum(np.abs(all_shap_values[i].values[0][top_index])):.4f}", use_column_width=True)
+        st.pyplot(fig)
 
     # Create a zip file with individual classification results
     with tempfile.TemporaryDirectory() as temp_dir:
