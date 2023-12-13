@@ -76,13 +76,16 @@ if uploaded_file is not None:
 
     # Plot aggregated SHAP values
     st.write("Aggregated SHAP Plot for All Images")
-    shap.image_plot(mean_shap_values, -img_array, show=False)
     
     # Save the plot to a BytesIO object
     shap_bytes = BytesIO()
+    shap.image_plot(mean_shap_values, -img_array, show=False)
     import matplotlib.pyplot as plt
     plt.savefig(shap_bytes, format='png')
     plt.close()  # Close the figure to prevent displaying it again
+    
+    # Display the saved plot
+    st.image(shap_bytes, format='png')
 
     # Create a DataFrame for all results
     df_all_results = pd.DataFrame(all_results)
