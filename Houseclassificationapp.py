@@ -44,7 +44,6 @@ st.title("House Classification App")
 uploaded_file = st.file_uploader("Choose a zip file...", type=["zip"])
 
 if uploaded_file is not None:
-    all_shap_values = []
     all_results = []
 
     with zipfile.ZipFile(uploaded_file, 'r') as zip_ref:
@@ -64,14 +63,14 @@ if uploaded_file is not None:
 
             # Explain the prediction using SHAP
             shap_values = explain_image(img_array)
-            all_shap_values.append(shap_values)
 
             # Create a DataFrame for results
             data = {'Original Filename': [file_name], 'Classified as': [class_label], 'Confidence': [confidence]}
             all_results.append(data)
 
             # Create SHAP summary plot for the image
-            shap.summary_plot(shap_values.values[0], -np.squeeze(img_array), class_names=class_labels, show=False)
+            st.write(f"SHAP Plot for {file_name}")
+            shap.summary_plot(shap_values.values, -np.squeeze(img_array), class_names=class_labels, show=False)
 
             # Save the SHAP plot to a file
             shap_plot_file_path = os.path.join(tempfile.gettempdir(), f'shap_plot_{file_name}.png')
@@ -80,22 +79,6 @@ if uploaded_file is not None:
 
     # Convert class labels to list of strings
     class_labels = list(map(str, class_labels))
-
-    # Aggregate SHAP values
-    all_shap_values = np.array(all_shap_values)
-    mean_shap_values = np.mean(all_shap_values, axis=0)
-
-    # Display the aggregated SHAP plot
-    st.write("Aggregated SHAP Plot for All Images")
-    shap.summary_plot(mean_shap_values.values, -np.squeeze(img_array), class_names=class_labels, show=False)
-
-    # Save the plot to a BytesIO object
-    shap_bytes = BytesIO()
-    plt.savefig(shap_bytes, format='png')
-    plt.close()  # Close the figure to prevent displaying it again
-    
-    # Display the saved plot
-    st.image(shap_bytes)
 
     # Create a DataFrame for all results
     df_all_results = pd.DataFrame(all_results)
@@ -120,9 +103,8 @@ if uploaded_file is not None:
             # Create download buttons for CSV, zip file, and SHAP plot
             st.download_button(label="Download CSV", data=df_all_results.to_csv(index=False), file_name="classification_results.csv", key="csv_results")
             st.download_button(label="Download Classified Zip Folder", data=zip_results_path, file_name="classification_results.zip", key="zip_results")
-            st.download_button(label="Download SHAP Plot", data=shap_bytes.getvalue(), file_name="shap_plot.png", key="shap_plot")
             st.download_button(label="Download SHAP Plots Zip", data=shap_plots_zip_path, file_name="shap_plots.zip", key="shap_plots")
-           
+
 
 
 
