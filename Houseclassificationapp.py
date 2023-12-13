@@ -71,7 +71,7 @@ if uploaded_file is not None:
             all_results.append(data)
 
             # Create SHAP plot for the image
-            shap.image_plot(shap_values[0], -img_array[0], show=False)  # Use shap_values[0]
+            shap.image_plot(shap_values[0], -img_array, show=False)  # Use shap_values[0]
 
             # Save the SHAP plot to a file
             shap_plot_file_path = os.path.join(tempfile.gettempdir(), f'shap_plot_{file_name}.png')
@@ -126,6 +126,7 @@ if uploaded_file is not None:
                     zipf.write(shap_plot_file_path, f'shap_plots/{file_name}.png')
             
             st.download_button(label="Download Individual SHAP Plots", data=shap_plots_zip_path, file_name="shap_plots.zip", key="shap_plots")
+
 
            
 
