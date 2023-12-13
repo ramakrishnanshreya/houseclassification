@@ -81,16 +81,11 @@ if uploaded_file is not None:
         st.write(f"Top Contributing Image for Class {label}")
         top_index = np.argmax(np.sum(np.abs(all_shap_values[i].values), axis=(1, 2, 3)))
     
-        # Plot the image with highlighted regions
-        fig, ax = plt.subplots()
-        ax.imshow(img_array[0])
-    
-        # Create a heatmap for the top contributing region
-        heatmap = shap_values.get_map(shap_values.data[top_index])
-        ax.imshow(heatmap, cmap='jet', alpha=0.5, extent=(0, 224, 224, 0), interpolation='bilinear')
+        # Create a SHAP plot with the top contributing region
+        shap.image_plot(shap_values.values[top_index], -img_array, show=False)
     
         # Display the image
-        st.pyplot(fig)
+        st.pyplot()
 
     # Create a zip file with individual classification results
     with tempfile.TemporaryDirectory() as temp_dir:
