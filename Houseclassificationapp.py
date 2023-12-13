@@ -70,21 +70,19 @@ if uploaded_file is not None:
             data = {'Original Filename': [file_name], 'Classified as': [class_label], 'Confidence': [confidence]}
             all_results.append(data)
 
-    # Display one contributing image for each class
-    for i, label in enumerate(class_labels):
-        st.write(f"Top Contributing Image for Class {label}")
-        top_index = np.argmax(np.sum(np.abs(all_shap_values[i].values), axis=(1, 2, 3)))
-
-        # Plot the image
-        plt.imshow(img_array[0])
-        plt.title(f"Contribution: {np.sum(np.abs(all_shap_values[i].values[0][top_index])):.4f}")
-        st.pyplot()
-
     # Convert class labels to list of strings
     class_labels = list(map(str, class_labels))
 
     # Create a DataFrame for all results
     df_all_results = pd.DataFrame(all_results)
+
+    # Display one contributing image for each class
+    for i, label in enumerate(class_labels):
+        st.write(f"Top Contributing Image for Class {label}")
+        top_index = np.argmax(np.sum(np.abs(all_shap_values[i].values), axis=(1, 2, 3)))
+
+        # Display the image
+        st.image(img_array[0], caption=f"Contribution: {np.sum(np.abs(all_shap_values[i].values[0][top_index])):.4f}", use_column_width=True)
 
     # Create a zip file with individual classification results
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -95,6 +93,12 @@ if uploaded_file is not None:
                 csv_bytes = BytesIO()
                 df.to_csv(csv_bytes, index=False)
                 zipf.writestr(f"classification_results_{file_names[idx]}.csv", csv_bytes.getvalue())
+
+    # Create download buttons for CSV, zip file, and SHAP plot
+    st.download_button(label="Download CSV", data=df_all_results.to_csv(index=False), file_name="classification_results.csv", key="csv_results")
+    st.download_button(label="Download Classified Zip Folder", data=zip_results_path, file_name="classification_results.zip", key="zip_results")
+    st.download_button(label="Download SHAP Plots Zip", data=shap_plots_zip_path, file_name="shap_plots.zip", key="shap_plots")
+
 
 
 
