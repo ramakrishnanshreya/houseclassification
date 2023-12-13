@@ -1,10 +1,12 @@
-import os
-import zipfile
-import pandas as pd
 import streamlit as st
 import tensorflow as tf
 from PIL import Image
 import numpy as np
+import shap
+from io import BytesIO
+import zipfile
+import os
+import pandas as pd
 
 # Load the model and labels
 model = tf.keras.models.load_model('keras_model.h5')
@@ -20,98 +22,61 @@ def classify_image(image_path):
     class_index = np.argmax(prediction)
     confidence = prediction[class_index]
     class_label = class_labels[class_index]
-    return class_label, confidence
+    return class_label, confidence, img_array
 
-# Function to classify all images in a folder
-def classify_images(image_paths, output_folder):
-    results = []
-    for image_path in image_paths:
-        # Check if the path is a file and ends with a supported image extension
-        if os.path.isfile(image_path) and image_path.lower().endswith(('.jpg', '.jpeg', '.png')):
-            try:
-                class_label, confidence = classify_image(image_path)
-                results.append({
-                    'filename': os.path.basename(image_path),
-                    'class_label': class_label,
-                    'confidence': confidence
-                })
+# Define SHAP explanation function
+def explain_image(img_array):
+    # Create a SHAP explainer
+    explainer = shap.Explainer(model)
+    shap_values = explainer.shap_values(img_array)
 
-                # Create a folder for each class
-                class_folder = os.path.join(output_folder, class_label)
-                os.makedirs(class_folder, exist_ok=True)
+    # Get class index and label
+    class_index = np.argmax(model.predict(img_array)[0])
+    class_label = class_labels[class_index]
 
-                # Move the image to the corresponding class folder
-                new_path = os.path.join(class_folder, os.path.basename(image_path))
-                os.rename(image_path, new_path)
-
-            except Exception as e:
-                st.warning(f"Error classifying image {image_path}: {e}")
-        else:
-            st.warning(f"Skipping non-image file: {image_path}")
-
-    return results
+    # Plot SHAP values
+    shap_plot = shap.image_plot(shap_values, img_array, class_names=[class_label], show=False)
+    return shap_plot
 
 # Create Streamlit app
-st.title("House Image Classification App")
+st.title("House Classification App")
 
-uploaded_zip = st.file_uploader("Upload a zip file containing images", type=["zip"])
+uploaded_file = st.file_uploader("Choose a file...", type=["jpg", "jpeg", "png"])
 
-if uploaded_zip is not None:
-    # Create an output folder to organize images by class
-    output_folder = "output_images"
-    os.makedirs(output_folder, exist_ok=True)
+if uploaded_file is not None:
+    st.image(uploaded_file, caption="Uploaded Image.", use_column_width=True)
+    st.write("")
+    st.write("Classifying...")
 
-    # Extract the zip file
-    with zipfile.ZipFile(uploaded_zip, 'r') as zip_ref:
-        extraction_path = "temp_images"
-        zip_ref.extractall(extraction_path)
-    
-    # Remove any subdirectories and move images to the extraction_path
-    for root, dirs, files in os.walk(extraction_path):
-        for file in files:
-            file_path = os.path.join(root, file)
-            os.rename(file_path, os.path.join(extraction_path, file))
-        for dir in dirs:
-            os.rmdir(os.path.join(root, dir))
-    
-    st.write(f"Classifying and organizing images in folder: {extraction_path}")
-    
-    # Get the list of image paths in the flattened extraction folder
-    image_paths = [os.path.join(extraction_path, filename) for filename in os.listdir(extraction_path)]
-    
-    # Perform inference on all images in the folder and organize by class
-    results = classify_images(image_paths, output_folder)
-    
-    # Display results
-    for result in results:
-        st.write(f"Original Filename: {result['filename']}")
-        st.write(f"Classified as: {result['class_label']} with Confidence: {result['confidence']:.2%}")
-        st.write("----")
-    
-    # Create a DataFrame from the results
-    df = pd.DataFrame(results)
-    
-    # Add a download button for the CSV file with image names and classes
-    st.download_button(
-        label="Download Results as CSV",
-        data=df.to_csv(index=False).encode('utf-8'),
-        file_name='image_classification_results.csv',
-        key='download_results_button'
-    )
-    
-    # Create a zip file containing the organized images
-    organized_zip_path = "organized_images.zip"
-    with zipfile.ZipFile(organized_zip_path, 'w') as zip_output:
-        for root, dirs, files in os.walk(output_folder):
-            for file in files:
-                file_path = os.path.join(root, file)
-                zip_output.write(file_path, os.path.relpath(file_path, output_folder))
-    
-    # Add a download button for the zip file with organized images
-    st.download_button(
-        label="Download Organized Images",
-        data=open(organized_zip_path, "rb").read(),
-        file_name='organized_images.zip',
-        key='download_organized_button'
-    )
-    
+    # Perform inference
+    class_label, confidence, img_array = classify_image(uploaded_file)
+    st.write(f"Predicted Class: {class_label}")
+    st.write(f"Confidence Score: {confidence:.2%}")
+
+    # Explain the prediction using SHAP
+    shap_plot = explain_image(img_array)
+
+    # Create a download button for the SHAP plot
+    shap_bytes = BytesIO()
+    shap_plot.savefig(shap_bytes, format='png')
+    st.download_button(label="Download SHAP Plot", data=shap_bytes.getvalue(), file_name="shap_plot.png", key="shap_plot")
+
+    # Create a DataFrame (replace this with your actual data)
+    data = {'Predicted Class': [class_label], 'Confidence Score': [confidence]}
+    df = pd.DataFrame(data)
+
+    # Create a download button for the CSV file
+    csv_bytes = BytesIO()
+    df.to_csv(csv_bytes, index=False)
+    st.download_button(label="Download CSV", data=csv_bytes.getvalue(), file_name="classification_results.csv", key="csv_results")
+
+    # Create a download button for the zip file
+    with zipfile.ZipFile("classification_results.zip", "w") as zipf:
+        zipf.writestr("classification_results.csv", df.to_csv(index=False))
+
+    st.download_button(label="Download Zip", data=None, file_name="classification_results.zip", key="zip_results")
+
+    # Close the SHAP plot to free up resources
+    st.pyplot(shap_plot)
+
+
