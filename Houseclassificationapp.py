@@ -32,7 +32,7 @@ def explain_image(img_array):
     explainer = shap.Explainer(model, masker)
 
     # Compute SHAP values
-    shap_values = explainer.shap_values(img_array, check_additivity=False)  # Use check_additivity=False to suppress a warning
+    shap_values = explainer.shap_values(img_array)
 
     return shap_values
 
