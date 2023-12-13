@@ -81,8 +81,7 @@ if uploaded_file is not None:
     
     # Save the plot to a BytesIO object
     shap_bytes = BytesIO()
-    shap.image_plot(mean_shap_values[0], -img_array[0], show=False)  # Updated line
-    import matplotlib.pyplot as plt
+    mean_shap_values.image_plot(-img_array[0], show=False)
     plt.savefig(shap_bytes, format='png')
     plt.close()  # Close the figure to prevent displaying it again
     
@@ -106,6 +105,7 @@ if uploaded_file is not None:
         st.download_button(label="Download CSV", data=df_all_results.to_csv(index=False), file_name="classification_results.csv", key="csv_results")
         st.download_button(label="Download Classified Zip Folder", data=zip_results_path, file_name="classification_results.zip", key="zip_results")
         st.download_button(label="Download SHAP Plot", data=shap_bytes.getvalue(), file_name="shap_plot.png", key="shap_plot")
+
 
 
 
