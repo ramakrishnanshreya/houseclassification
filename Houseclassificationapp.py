@@ -76,7 +76,13 @@ if uploaded_file is not None:
 
     # Plot aggregated SHAP values
     st.write("Aggregated SHAP Plot for All Images")
-    shap.image_plot(mean_shap_values, -img_array, show=False)  # Note the negative sign for the image array
+    shap.image_plot(mean_shap_values, -img_array, show=False)
+    
+    # Save the plot to a BytesIO object
+    shap_bytes = BytesIO()
+    import matplotlib.pyplot as plt
+    plt.savefig(shap_bytes, format='png')
+    plt.close()  # Close the figure to prevent displaying it again
 
     # Create a DataFrame for all results
     df_all_results = pd.DataFrame(all_results)
@@ -94,10 +100,8 @@ if uploaded_file is not None:
         # Create download buttons for CSV, zip file, and SHAP plot
         st.download_button(label="Download CSV", data=df_all_results.to_csv(index=False), file_name="classification_results.csv", key="csv_results")
         st.download_button(label="Download Classified Zip Folder", data=zip_results_path, file_name="classification_results.zip", key="zip_results")
-
-        shap_bytes = BytesIO()
-        shap.image_plot(mean_shap_values, -img_array, show=False).savefig(shap_bytes, format='png')
         st.download_button(label="Download SHAP Plot", data=shap_bytes.getvalue(), file_name="shap_plot.png", key="shap_plot")
+
 
 
 
