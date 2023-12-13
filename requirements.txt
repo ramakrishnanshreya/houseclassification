@@ -1,7 +1,8 @@
+matplotlib>=3.4.0
 numpy>=1.15.1
 Pillow>=9.0.1
 shap>=0.39.0
-streamlit
-tensorflow
-pandas
-opencv-python-headless
+streamlit>=0.88.0
+tensorflow>=2.0.0
+pandas>=1.1.0
+opencv-python-headless>=4.5.3
