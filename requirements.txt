@@ -1,6 +1,6 @@
 numpy>=1.15.1
 Pillow>=9.0.1
-shap
+shap >=0.39.0
 streamlit
 tensorflow
 pandas
