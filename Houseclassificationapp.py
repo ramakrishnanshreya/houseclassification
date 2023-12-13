@@ -77,7 +77,7 @@ if uploaded_file is not None:
 
         # Plot the image
         plt.imshow(img_array[0])
-        plt.title(f"Contribution: {np.sum(np.abs(all_shap_values[i].values[top_index])):.4f}")
+        plt.title(f"Contribution: {np.sum(np.abs(all_shap_values[i].values[0][top_index])):.4f}")
         st.pyplot()
 
     # Convert class labels to list of strings
