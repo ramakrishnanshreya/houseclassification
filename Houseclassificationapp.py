@@ -81,6 +81,8 @@ if uploaded_file is not None:
         st.write(f"Top Contributing Image for Class {label}")
         top_index = np.argmax(np.sum(np.abs(all_shap_values[i].values), axis=(1, 2, 3)))
     
+        print(f"top_index: {top_index}")  # Add this line to print top_index
+    
         # Create a SHAP plot with the top contributing region
         shap.image_plot(shap_values.values[top_index], -img_array, show=False)
     
