@@ -35,6 +35,7 @@ uploaded_file = st.file_uploader("Choose a zip file...", type=["zip"])
 
 if uploaded_file is not None:
     all_shap_values = []
+    all_results = []
 
     with zipfile.ZipFile(uploaded_file, 'r') as zip_ref:
         file_names = zip_ref.namelist()
@@ -55,12 +56,10 @@ if uploaded_file is not None:
 
             # Create a DataFrame for results
             data = {'Original Filename': [file_name], 'Classified as': [class_label], 'Confidence': [confidence]}
-            df = pd.DataFrame(data)
+            all_results.append(data)
 
-            # Create a download button for the CSV file
-            csv_bytes = BytesIO()
-            df.to_csv(csv_bytes, index=False)
-            st.download_button(label=f"Download CSV ({file_name})", data=csv_bytes.getvalue(), file_name=f"classification_results_{file_name}.csv", key=f"csv_results_{file_name}")
+    # Convert class labels to list of strings
+    class_labels = list(map(str, class_labels))
 
     # Aggregate SHAP values
     all_shap_values = np.array(all_shap_values)
@@ -68,7 +67,32 @@ if uploaded_file is not None:
 
     # Plot aggregated SHAP values
     st.write("Aggregated SHAP Plot for All Images")
-    shap.image_plot(mean_shap_values, img_array, class_names=class_labels, show=True)
+    shap_plot = shap.image_plot(mean_shap_values, img_array, class_names=class_labels, show=False)
+    st.pyplot(shap_plot)
+
+    # Create a DataFrame for all results
+    df_all_results = pd.DataFrame(all_results)
+
+    # Create a zip file with individual classification results
+    zip_results_path = "classification_results.zip"
+    with zipfile.ZipFile(zip_results_path, "w") as zipf:
+        for idx, data in enumerate(all_results):
+            df = pd.DataFrame(data)
+            csv_bytes = BytesIO()
+            df.to_csv(csv_bytes, index=False)
+            zipf.writestr(f"classification_results_{file_names[idx]}.csv", csv_bytes.getvalue())
+
+    # Create download buttons for CSV, zip file, and SHAP plot
+    csv_bytes = BytesIO()
+    df_all_results.to_csv(csv_bytes, index=False)
+    st.download_button(label="Download CSV", data=csv_bytes.getvalue(), file_name="classification_results.csv", key="csv_results")
+
+    st.download_button(label="Download Classified Zip Folder", data=None, file_name=zip_results_path, key="zip_results")
+
+    shap_bytes = BytesIO()
+    shap_plot.savefig(shap_bytes, format='png')
+    st.download_button(label="Download SHAP Plot", data=shap_bytes.getvalue(), file_name="shap_plot.png", key="shap_plot")
+
 
 
 
