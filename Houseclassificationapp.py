@@ -23,9 +23,13 @@ def classify_image(img_array):
 
 # Define SHAP explanation function
 def explain_image(img_array):
-    # Create a SHAP explainer
-    explainer = shap.Explainer(model)
+    # Create a SHAP explainer with a suitable masker
+    masker = shap.maskers.Image("inpaint_telea", img_array.shape[1:3])
+    explainer = shap.Explainer(model, masker)
+
+    # Compute SHAP values
     shap_values = explainer.shap_values(img_array)
+
     return shap_values
 
 # Create Streamlit app
