@@ -1,4 +1,5 @@
 import os
+import zipfile
 import pandas as pd
 import streamlit as st
 import tensorflow as tf
@@ -6,8 +7,8 @@ from PIL import Image
 import numpy as np
 
 # Load the model and labels
-model = tf.keras.models.load_model('your_model.h5')
-with open('class_labels.txt', 'r') as file:
+model = tf.keras.models.load_model('keras_model.h5')
+with open('labels.txt', 'r') as file:
     class_labels = file.read().splitlines()
 
 # Define image classification function
@@ -22,29 +23,39 @@ def classify_image(image_path):
     return class_label, confidence
 
 # Function to classify all images in a folder
-def classify_folder(folder_path):
+def classify_images(image_paths):
     results = []
-    for filename in os.listdir(folder_path):
-        if filename.endswith(('.jpg', '.jpeg', '.png')):
-            image_path = os.path.join(folder_path, filename)
+    for image_path in image_paths:
+        try:
             class_label, confidence = classify_image(image_path)
             results.append({
-                'filename': filename,
+                'filename': os.path.basename(image_path),
                 'class_label': class_label,
                 'confidence': confidence
             })
+        except Exception as e:
+            st.warning(f"Error classifying image {image_path}: {e}")
+
     return results
 
 # Create Streamlit app
 st.title("Image Classification App")
 
-uploaded_folder = st.folder_uploader("Choose a folder...", type=["jpg", "jpeg", "png"])
+uploaded_zip = st.file_uploader("Upload a zip file containing images", type=["zip"])
 
-if uploaded_folder is not None:
-    st.write(f"Classifying images in folder: {uploaded_folder}")
+if uploaded_zip is not None:
+    # Extract the zip file
+    with zipfile.ZipFile(uploaded_zip, 'r') as zip_ref:
+        extraction_path = "temp_images"
+        zip_ref.extractall(extraction_path)
+
+    st.write(f"Classifying images in folder: {extraction_path}")
+
+    # Get the list of image paths in the extracted folder
+    image_paths = [os.path.join(extraction_path, filename) for filename in os.listdir(extraction_path)]
 
     # Perform inference on all images in the folder
-    results = classify_folder(uploaded_folder)
+    results = classify_images(image_paths)
 
     # Display results
     for result in results:
