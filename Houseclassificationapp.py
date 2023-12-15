@@ -54,6 +54,7 @@ def classify_images(image_paths, output_folder):
 # Create Streamlit app
 st.title("Image Classification App")
 
+# Upload button for the zip file containing images
 uploaded_zip = st.file_uploader("Upload a zip file containing images", type=["zip"])
 
 if uploaded_zip is not None:
@@ -66,24 +67,16 @@ if uploaded_zip is not None:
         extraction_path = "temp_images"
         zip_ref.extractall(extraction_path)
 
-    st.write(f"Classifying and organizing images in folder: {extraction_path}")
-
     # Get the list of image paths in the extracted folder
     image_paths = [os.path.join(extraction_path, filename) for filename in os.listdir(extraction_path)]
 
     # Perform inference on all images in the folder and organize by class
     results = classify_images(image_paths, output_folder)
 
-    # Display results
-    for result in results:
-        st.write(f"Original Filename: {result['filename']}")
-        st.write(f"Classified as: {result['class_label']} with Confidence: {result['confidence']:.2%}")
-        st.write("----")
-
     # Create a DataFrame from the results
     df = pd.DataFrame(results)
 
-    # Add a download button for the CSV file with image names and classes
+    # Add download buttons for the CSV file with image names and classes
     st.download_button(
         label="Download Results as CSV",
         data=df.to_csv(index=False).encode('utf-8'),
