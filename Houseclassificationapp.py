@@ -76,10 +76,13 @@ if uploaded_zip is not None:
     # Create a DataFrame from the results
     df = pd.DataFrame(results)
 
+    # Remove the index column from the CSV
+    csv_data = df.to_csv(index=False).encode('utf-8')
+
     # Add download buttons for the CSV file with image names and classes
     st.download_button(
         label="Download Results as CSV",
-        data=df.to_csv(index=False).encode('utf-8'),
+        data=csv_data,
         file_name='image_classification_results.csv',
         key='download_results_button'
     )
