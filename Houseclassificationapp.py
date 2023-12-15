@@ -31,7 +31,7 @@ def classify_images(image_paths, output_folder):
             try:
                 class_label, confidence = classify_image(image_path)
                 results.append({
-                    'filename': os.path.basename(image_path),
+                    'original_filename': os.path.basename(image_path),
                     'class_label': class_label,
                     'confidence': confidence
                 })
@@ -40,7 +40,7 @@ def classify_images(image_paths, output_folder):
                 class_folder = os.path.join(output_folder, class_label)
                 os.makedirs(class_folder, exist_ok=True)
 
-                # Move the image to the corresponding class folder
+                # Move the image to the corresponding class folder with its original name
                 new_path = os.path.join(class_folder, os.path.basename(image_path))
                 os.rename(image_path, new_path)
 
